@@ -51,7 +51,7 @@ import java.util.List;
  * Created by necer on 2018/11/12.
  */
 public abstract class NCalendar extends FrameLayout implements IICalendar, NestedScrollingParent, ValueAnimator.AnimatorUpdateListener {
-
+    private final String TAG = "NCalendar";
     protected WeekCalendar weekCalendar;
     protected MonthCalendar monthCalendar;
 
@@ -59,6 +59,8 @@ public abstract class NCalendar extends FrameLayout implements IICalendar, Neste
     protected int weekHeight;
     //月日历的高度,是日历整个的高
     protected int monthHeight;
+    //直接子容器 layout top 位置
+    private int childLayoutTop = 0;
     //月日历拉伸的高度
     protected int stretchMonthHeight;
     //日历状态，默认月
@@ -166,20 +168,18 @@ public abstract class NCalendar extends FrameLayout implements IICalendar, Neste
             }
         };
         childViewValueAnimator.addListener(onEndAnimatorListener);
+        initView();
+    }
 
-        post(new Runnable() {
-            @Override
-            public void run() {
-                monthCalendar.setVisibility(calendarState == CalendarState.MONTH ? VISIBLE : INVISIBLE);
-                weekCalendar.setVisibility(calendarState == CalendarState.WEEK ? VISIBLE : INVISIBLE);
-                monthRect = new RectF(0, 0, monthCalendar.getMeasuredWidth(), monthCalendar.getMeasuredHeight());
-                weekRect = new RectF(0, 0, weekCalendar.getMeasuredWidth(), weekCalendar.getMeasuredHeight());
-                stretchMonthRect = new RectF(0, 0, monthCalendar.getMeasuredWidth(), stretchMonthHeight);
-                monthCalendar.setY(calendarState == CalendarState.MONTH ? 0 : getMonthYOnWeekState(weekCalendar.getFirstDate()));
-                childView.setY(calendarState == CalendarState.MONTH ? monthHeight : weekHeight);
-                isInflateFinish = true;
-            }
-        });
+    private void initView(){
+        monthCalendar.setVisibility(calendarState == CalendarState.MONTH ? VISIBLE : INVISIBLE);
+        weekCalendar.setVisibility(calendarState == CalendarState.WEEK ? VISIBLE : INVISIBLE);
+        monthRect = new RectF(0, 0, monthCalendar.getMeasuredWidth(), monthCalendar.getMeasuredHeight());
+        weekRect = new RectF(0, 0, weekCalendar.getMeasuredWidth(), weekCalendar.getMeasuredHeight());
+        stretchMonthRect = new RectF(0, 0, monthCalendar.getMeasuredWidth(), stretchMonthHeight);
+        monthCalendar.setY(calendarState == CalendarState.MONTH ? 0 : getMonthYOnWeekState(weekCalendar.getFirstDate()));
+        childLayoutTop = calendarState == CalendarState.MONTH ? monthHeight : weekHeight;
+        isInflateFinish = true;
     }
 
     private ValueAnimator getValueAnimator(int duration) {
@@ -233,8 +233,7 @@ public abstract class NCalendar extends FrameLayout implements IICalendar, Neste
         } else {
             monthCalendar.layout(paddingLeft, 0, measuredWidth - paddingRight, monthHeight);
         }
-        childView.layout(paddingLeft, monthHeight, measuredWidth - paddingRight, childView.getMeasuredHeight() + monthHeight);
-
+        childView.layout(paddingLeft, childLayoutTop, measuredWidth - paddingRight, childView.getMeasuredHeight() + monthHeight);
 
     }
 
